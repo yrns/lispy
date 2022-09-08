@@ -140,7 +140,7 @@
   (require 'ediff-util)
   (require 'semantic)
   (require 'semantic/db))
-(require 'zoutline)
+;;(require 'zoutline)
 (require 'mode-local)
 (require 'lispy-tags)
 (require 'help-fns)
