@@ -9,6 +9,29 @@
    alt="lispy logo"/>
 </p>
 
+## This is a temporary fork
+
+This is a temporary fork of: https://github.com/abo-abo/lispy
+
+I will maintain Lispy here until [abo-abo](https://github.com/abo-abo/) returns. Feel free to open up issues and submit pull requests. I have already ported over and merged some open PRs on the original Lispy repo.
+
+Presuming [Elpaca](https://github.com/progfolio/elpaca), use as follows:
+
+```lisp
+(use-package lispy
+  :ensure (:host github :repo "enzuru/lispy")
+  :hook ((emacs-lisp-mode . lispy-mode)
+         (ielm-mode . lispy-mode)
+         (lisp-mode . lispy-mode)
+         (lisp-interaction-mode . lispy-mode)
+         (geiser-repl-mode . lispy-mode)
+         (sly-mrepl-mode . lispy-mode)
+         (cider-repl-mode . lispy-mode)
+         (clojure-mode . lispy-mode)
+         (scheme-mode . lispy-mode)))
+
+```
+
 > short and sweet LISP editing
 
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc/generate-toc again -->
@@ -42,12 +65,12 @@
     - [Commands that operate on region](#commands-that-operate-on-region)
 - [IDE-like features](#ide-like-features)
 - [Demos](#demos)
-    - [[Demo 1: Practice generating code](http://abo-abo.github.io/lispy/demo-1)](#demo-1-practice-generating-codehttpabo-abogithubiolispydemo-1)
-    - [[Demo 2: The substitution model for procedure application](http://abo-abo.github.io/lispy/demo-2)](#demo-2-the-substitution-model-for-procedure-applicationhttpabo-abogithubiolispydemo-2)
-    - [[Demo 3: Down the rabbit hole](http://abo-abo.github.io/lispy/demo-3)](#demo-3-down-the-rabbit-holehttpabo-abogithubiolispydemo-3)
-    - [[Demo 4: Project Euler p100 and Clojure](http://abo-abo.github.io/lispy/demo-4)](#demo-4-project-euler-p100-and-clojurehttpabo-abogithubiolispydemo-4)
-    - [[Demo 5: ->>ification](http://abo-abo.github.io/lispy/demo-5)](#demo-5--ificationhttpabo-abogithubiolispydemo-5)
-    - [[Demo 6: cond->if->cond](http://abo-abo.github.io/lispy/demo-6)](#demo-6-cond-if-condhttpabo-abogithubiolispydemo-6)
+    - [Demo 1: Practice generating code](https://enzuru.github.io/lispy/demo-1.html)
+    - [Demo 2: The substitution model for procedure application](https://enzuru.github.io/lispy/demo-2.html)
+    - [Demo 3: Down the rabbit hole](https://enzuru.github.io/lispy/demo-3.html)
+    - [Demo 4: Project Euler p100 and Clojure](https://enzuru.github.io/lispy/demo-4.html)
+    - [Demo 5: ->>ification](https://enzuru.github.io/lispy/demo-5.html)
+    - [Demo 6: cond->if->cond](https://enzuru.github.io/lispy/demo-6.html)
 - [Screencasts](#screencasts)
 
 <!-- markdown-toc end -->
@@ -75,7 +98,7 @@ The killer-feature are the short bindings:
 Most of more than 100 interactive commands that `lispy` provides are
 bound to <kbd>a</kbd>-<kbd>z</kbd> and <kbd>A</kbd>-<kbd>Z</kbd> in
 `lispy-mode`.  You can see the full command reference with many
-examples [here](http://abo-abo.github.io/lispy/).
+examples [here](http://enzuru.github.io/lispy/reference.html).
 
 The price for these short bindings is that they are only active when:
 
@@ -187,7 +210,7 @@ situation.
     - <kbd>F</kbd> jumps to symbol, <kbd>D</kbd> jumps back
     - <kbd>C-1</kbd> shows documentation in an overlay
     - <kbd>C-2</kbd> shows arguments in an overlay
-    - [<kbd>Z</kbd>](http://abo-abo.github.io/lispy/#lispy-edebug-stop) breaks
+    - [<kbd>Z</kbd>](http://enzuru.github.io/lispy/reference.html#lispy-edebug-stop) breaks
       out of `edebug`, while storing current function's arguments
 
 Some pictures [here](#ide-like-features).
@@ -210,7 +233,7 @@ Some pictures [here](#ide-like-features).
     - `edebug` (<kbd>xe</kbd>)
 
 ## Function reference
-Most functions are cataloged and described at http://abo-abo.github.io/lispy/.
+Most functions are cataloged and described at http://enzuru.github.io/lispy/reference.html.
 
 # Getting Started
 ## Installation instructions
@@ -360,14 +383,14 @@ this:
 ## List commands overview
 ### Inserting pairs
 
-Here's a list of commands for inserting [pairs](http://abo-abo.github.io/lispy/#lispy-pair):
+Here's a list of commands for inserting [pairs](http://enzuru.github.io/lispy/reference.html#lispy-pair):
 
 key               | command
 ------------------|-------------------------------------------------------------------
-  <kbd>(</kbd>    | [`lispy-parens`](http://abo-abo.github.io/lispy/#lispy-parens)
-  <kbd>{</kbd>    | [`lispy-braces`](http://abo-abo.github.io/lispy/#lispy-braces)
-  <kbd>}</kbd>    | [`lispy-brackets`](http://abo-abo.github.io/lispy/#lispy-brackets)
-  <kbd>"</kbd>    | [`lispy-quotes`](http://abo-abo.github.io/lispy/#lispy-quotes)
+  <kbd>(</kbd>    | [`lispy-parens`](http://enzuru.github.io/lispy/reference.html#lispy-parens)
+  <kbd>{</kbd>    | [`lispy-braces`](http://enzuru.github.io/lispy/reference.html#lispy-braces)
+  <kbd>}</kbd>    | [`lispy-brackets`](http://enzuru.github.io/lispy/reference.html#lispy-brackets)
+  <kbd>"</kbd>    | [`lispy-quotes`](http://enzuru.github.io/lispy/reference.html#lispy-quotes)
 
 ### Reversible commands
 
@@ -570,12 +593,12 @@ their output will be updated after the eval.
 
 # Demos
 
-## [Demo 1: Practice generating code](http://abo-abo.github.io/lispy/demo-1)
-## [Demo 2: The substitution model for procedure application](http://abo-abo.github.io/lispy/demo-2)
-## [Demo 3: Down the rabbit hole](http://abo-abo.github.io/lispy/demo-3)
-## [Demo 4: Project Euler p100 and Clojure](http://abo-abo.github.io/lispy/demo-4)
-## [Demo 5: ->>ification](http://abo-abo.github.io/lispy/demo-5)
-## [Demo 6: cond->if->cond](http://abo-abo.github.io/lispy/demo-6)
+## [Demo 1: Practice generating code](https://enzuru.github.io/lispy/demo-1.html)
+## [Demo 2: The substitution model for procedure application](https://enzuru.github.io/lispy/demo-2.html)
+## [Demo 3: Down the rabbit hole](https://enzuru.github.io/lispy/demo-3.html)
+## [Demo 4: Project Euler p100 and Clojure](https://enzuru.github.io/lispy/demo-4.html)
+## [Demo 5: ->>ification](https://enzuru.github.io/lispy/demo-5.html)
+## [Demo 6: cond->if->cond](https://enzuru.github.io/lispy/demo-6.html)
 
 # Screencasts
 

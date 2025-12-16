@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2025-10-27 Mon 21:43 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>lispy.el demo 1: practice generating code</title>
+<meta name="author" content="Ahmed Khanzada" />
+<meta name="generator" content="Org Mode" />
+<link rel="stylesheet" type="text/css" href="demo-style.css"/>
+</head>
+<body>
+<div id="preamble" class="status">
+<link rel="icon" type="image/x-icon" href="https://github.com/favicon.ico"/>
+</div>
+<div id="content" class="content">
+<h1 class="title">lispy.el demo 1: practice generating code</h1>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left"><a href="https://github.com/abo-abo/lispy">Back to github</a></td>
+<td class="org-left"><a href="https://raw.githubusercontent.com/abo-abo/lispy/gh-pages/demo-1.org">This file in org-mode</a></td>
+<td class="org-left"><a href="http://abo-abo.github.io/lispy/">Function reference</a></td>
+</tr>
+</tbody>
+</table>
+<div id="outline-container-orgcaba7e5" class="outline-2">
+<h2 id="orgcaba7e5">Intro</h2>
+<div class="outline-text-2" id="text-orgcaba7e5">
+<p>
+Comes from <a href="http://emacs.stackexchange.com/questions/3881/changing-the-role-of-the-underline-and-the-minus-sign-just-in-latex-mode">this emacs.stackexchange question</a>.
+</p>
+</div>
+</div>
+<div id="outline-container-org7fa1f1d" class="outline-2">
+<h2 id="org7fa1f1d">Task summary</h2>
+<div class="outline-text-2" id="text-org7fa1f1d">
+<p>
+For <code>LaTeX-mode</code>, swap <kbd>-</kbd> to <kbd>_</kbd>, and swap <kbd>6</kbd> to <kbd>^</kbd>.
+</p>
+</div>
+</div>
+<div id="outline-container-orgcc9eadd" class="outline-2">
+<h2 id="orgcc9eadd">Screencast</h2>
+<div class="outline-text-2" id="text-orgcc9eadd">
+<p>
+The screencast for this demo is here: <a href="https://www.youtube.com/watch?v=2w1h48CYOMo">https://www.youtube.com/watch?v=2w1h48CYOMo</a>
+</p>
+</div>
+</div>
+<div id="outline-container-orgf453c0b" class="outline-2">
+<h2 id="orgf453c0b">Resulting code</h2>
+<div class="outline-text-2" id="text-orgf453c0b">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><code><span style="color: #e7dbc0;">(</span><span style="color: #a1b9e1;">define-key LaTeX-mode-map </span><span style="color: #c793d1bde2ad;">"_"</span> <span style="color: #a1b9e1;">(</span><span style="color: #ccb9e3;">lambda</span><span style="color: #ccb9e3;"> ()</span> <span style="color: #ccb9e3;">(</span><span style="color: #797979;">interactive</span><span style="color: #ccb9e3;">)</span> <span style="color: #ccb9e3;">(</span><span style="color: #797979;">insert </span><span style="color: #859e859e859e;">"-"</span><span style="color: #ccb9e3;">)</span><span style="color: #a1b9e1;">)</span><span style="color: #e7dbc0;">)</span>
+<span style="color: #e7dbc0;">(</span><span style="color: #a1b9e1;">define-key LaTeX-mode-map </span><span style="color: #c793d1bde2ad;">"-"</span> <span style="color: #a1b9e1;">(</span><span style="color: #ccb9e3;">lambda</span><span style="color: #ccb9e3;"> ()</span> <span style="color: #ccb9e3;">(</span><span style="color: #797979;">interactive</span><span style="color: #ccb9e3;">)</span> <span style="color: #ccb9e3;">(</span><span style="color: #797979;">insert </span><span style="color: #859e859e859e;">"_"</span><span style="color: #ccb9e3;">)</span><span style="color: #a1b9e1;">)</span><span style="color: #e7dbc0;">)</span>
+<span style="color: #e7dbc0;">(</span><span style="color: #a1b9e1;">define-key LaTeX-mode-map </span><span style="color: #c793d1bde2ad;">"^"</span> <span style="color: #a1b9e1;">(</span><span style="color: #ccb9e3;">lambda</span><span style="color: #ccb9e3;"> ()</span> <span style="color: #ccb9e3;">(</span><span style="color: #797979;">interactive</span><span style="color: #ccb9e3;">)</span> <span style="color: #ccb9e3;">(</span><span style="color: #797979;">insert </span><span style="color: #859e859e859e;">"6"</span><span style="color: #ccb9e3;">)</span><span style="color: #a1b9e1;">)</span><span style="color: #e7dbc0;">)</span>
+<span style="color: #e7dbc0;">(</span><span style="color: #a1b9e1;">define-key LaTeX-mode-map </span><span style="color: #c793d1bde2ad;">"6"</span> <span style="color: #a1b9e1;">(</span><span style="color: #ccb9e3;">lambda</span><span style="color: #ccb9e3;"> ()</span> <span style="color: #ccb9e3;">(</span><span style="color: #797979;">interactive</span><span style="color: #ccb9e3;">)</span> <span style="color: #ccb9e3;">(</span><span style="color: #797979;">insert </span><span style="color: #859e859e859e;">"^"</span><span style="color: #ccb9e3;">)</span><span style="color: #a1b9e1;">)</span><span style="color: #e7dbc0;">)</span>
+</code></pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org57e919b" class="outline-2">
+<h2 id="org57e919b">How to generate this code:</h2>
+<div class="outline-text-2" id="text-org57e919b">
+</div>
+<div id="outline-container-orga4d10ab" class="outline-3">
+<h3 id="orga4d10ab">step one</h3>
+<div class="outline-text-3" id="text-orga4d10ab">
+<p>
+Write:
+</p>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><code><span style="color: #a6e3a1;">"-"</span> <span style="color: #a6e3a1;">"_"</span>
+<span style="color: #a6e3a1;">"6"</span> <span style="color: #a6e3a1;">"^"</span>
+</code></pre>
+</div>
+<ul class="org-ul">
+<li>position the point at the start</li>
+<li><kbd>C-7</kbd> to add one cursor</li>
+<li><kbd>M-m</kbd> to mark the first string</li>
+<li><kbd>&gt;</kbd> to extend the region to the second string</li>
+<li><kbd>c</kbd> to clone region</li>
+<li><kbd>i</kbd> to select the first element of the region</li>
+<li><kbd>s</kbd> to move the region down</li>
+<li><kbd>C-7</kbd> to cancel <code>multiple-cursors</code>.</li>
+</ul>
+<p>
+You should now have:
+</p>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><code><span style="color: #a6e3a1;">"_"</span> <span style="color: #a6e3a1;">"-"</span>
+<span style="color: #a6e3a1;">"-"</span> <span style="color: #a6e3a1;">"_"</span>
+<span style="color: #a6e3a1;">"^"</span> <span style="color: #a6e3a1;">"6"</span>
+<span style="color: #a6e3a1;">"6"</span> <span style="color: #a6e3a1;">"^"</span>
+</code></pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org8ba2985" class="outline-3">
+<h3 id="org8ba2985">step two</h3>
+<div class="outline-text-3" id="text-org8ba2985">
+<p>
+Write:
+</p>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><code><span style="color: #e7dbc0;">(</span><span style="color: #a1b9e1;">define-key LaTeX-mode-map (</span><span style="color: #ccb9e3;">lambda</span><span style="color: #ccb9e3;"> ()</span> <span style="color: #ccb9e3;">(</span><span style="color: #797979;">interactive</span><span style="color: #ccb9e3;">)</span> <span style="color: #ccb9e3;">(</span><span style="color: #797979;">insert</span><span style="color: #ccb9e3;">)</span><span style="color: #a1b9e1;">)</span><span style="color: #e7dbc0;">)</span>
+</code></pre>
+</div>
+<p>
+Kill it with <kbd>C-,</kbd> or <kbd>C-k</kbd>.
+</p>
+</div>
+</div>
+<div id="outline-container-orgd00c918" class="outline-3">
+<h3 id="orgd00c918">step three</h3>
+<div class="outline-text-3" id="text-orgd00c918">
+<ul class="org-ul">
+<li>position the point at the start</li>
+<li><kbd>M-3 C-7</kbd> to add three cursors</li>
+<li><kbd>C-y</kbd> to paste the code from before</li>
+<li>add one space</li>
+<li><kbd>M-m</kbd> mark</li>
+<li><kbd>&gt;</kbd> grow</li>
+<li><kbd>ok</kbd> insert up</li>
+<li><kbd>iw</kbd> select first and move up</li>
+<li><kbd>jj</kbd> go down twice</li>
+<li><kbd>okok</kbd> insert up twice</li>
+<li><kbd>C-7</kbd> to cancel <code>multiple-cursors</code></li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2025-10-27 Mon 21:44 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>lispy.el demo 6: refactoring with cond-&gt;if-&gt;cond</title>
+<meta name="author" content="Ahmed Khanzada" />
+<meta name="generator" content="Org Mode" />
+<link rel="stylesheet" type="text/css" href="demo-style.css"/>
+</head>
+<body>
+<div id="preamble" class="status">
+<link rel="icon" type="image/x-icon" href="https://github.com/favicon.ico"/>
+</div>
+<div id="content" class="content">
+<h1 class="title">lispy.el demo 6: refactoring with cond-&gt;if-&gt;cond</h1>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left"><a href="https://github.com/abo-abo/lispy">Back to github</a></td>
+<td class="org-left"><a href="https://raw.githubusercontent.com/abo-abo/lispy/gh-pages/demo-6.org">This file in org-mode</a></td>
+<td class="org-left"><a href="http://abo-abo.github.io/lispy/">Function reference</a></td>
+</tr>
+</tbody>
+</table>
+<div id="outline-container-org087f26d" class="outline-2">
+<h2 id="org087f26d">Intro</h2>
+<div class="outline-text-2" id="text-org087f26d">
+<p>
+This demo covers a little refactoring commit to lispy that I've made
+in <a href="https://github.com/abo-abo/lispy/commit/9ab05b0043831c801b5a4de5df3ea04a146d5ce9">9ab05b0</a>.
+</p>
+</div>
+</div>
+<div id="outline-container-org25bc59a" class="outline-2">
+<h2 id="org25bc59a">Task summary</h2>
+<div class="outline-text-2" id="text-org25bc59a">
+<p>
+Transform from:
+</p>
+<div class="org-src-container">
+<pre class="src src-elisp"><code><span style="color: #e7dbc0;"><cursor>(</cursor></span><span style="color: #a1b9e1;">defun</span><span style="color: #a1b9e1;"> </span><span style="color: #a1b9e1;">lispy--occur-action</span><span style="color: #a1b9e1;"> (</span><span style="color: #ccb9e3;">x</span><span style="color: #a1b9e1;">)</span>
+  <span style="color: #c793d1bde2ad;">"Goto line X for `</span><span style="color: #c793d1bde2ad;">lispy-occur</span><span style="color: #c793d1bde2ad;">'."</span>
+  <span style="color: #a1b9e1;">(</span><span style="color: #ccb9e3;">goto-char lispy--occur-beg</span><span style="color: #a1b9e1;">)</span>
+  <span style="color: #a1b9e1;">(</span><span style="color: #ccb9e3;">if</span><span style="color: #ccb9e3;"> (</span><span style="color: #797979;">string= helm-input </span><span style="color: #859e859e859e;">""</span><span style="color: #ccb9e3;">)</span>
+      <span style="color: #ccb9e3;">(</span><span style="color: #797979;">progn</span><span style="color: #797979;">
+        (</span><span style="color: #e7dbc0;">forward-line x</span><span style="color: #797979;">)</span>
+        <span style="color: #797979;">(</span><span style="color: #e7dbc0;">back-to-indentation</span><span style="color: #797979;">)</span>
+        <span style="color: #797979;">(</span><span style="color: #e7dbc0;">when</span><span style="color: #e7dbc0;"> (</span><span style="color: #a1b9e1;">re-search-forward lispy-left (</span><span style="color: #ccb9e3;">line-end-position</span><span style="color: #a1b9e1;">)</span> <span style="color: #a1b9e1;">t</span><span style="color: #e7dbc0;">)</span>
+          <span style="color: #e7dbc0;">(</span><span style="color: #a1b9e1;">goto-char (</span><span style="color: #ccb9e3;">match-beginning 0</span><span style="color: #a1b9e1;">)</span><span style="color: #e7dbc0;">)</span><span style="color: #797979;">)</span><span style="color: #ccb9e3;">)</span>
+    <span style="color: #ccb9e3;">(</span><span style="color: #797979;">forward-line (</span><span style="color: #e7dbc0;">1- x</span><span style="color: #797979;">)</span><span style="color: #ccb9e3;">)</span>
+    <span style="color: #ccb9e3;">(</span><span style="color: #797979;">re-search-forward (</span><span style="color: #e7dbc0;">lispy--occur-regex</span><span style="color: #797979;">)</span>
+                       <span style="color: #797979;">(</span><span style="color: #e7dbc0;">line-end-position</span><span style="color: #797979;">)</span>
+                       <span style="color: #797979;">t</span><span style="color: #ccb9e3;">)</span>
+    <span style="color: #ccb9e3;">(</span><span style="color: #797979;">let</span><span style="color: #797979;"> (</span><span style="color: #e7dbc0;">(</span><span style="color: #a1b9e1;">str-or-comment (</span><span style="color: #ccb9e3;">lispy--in-string-or-comment-p</span><span style="color: #a1b9e1;">)</span><span style="color: #e7dbc0;">)</span><span style="color: #797979;">)</span>
+      <span style="color: #797979;">(</span><span style="color: #e7dbc0;">if</span><span style="color: #e7dbc0;"> str-or-comment
+          (</span><span style="color: #a1b9e1;">goto-char str-or-comment</span><span style="color: #e7dbc0;">)</span>
+        <span style="color: #e7dbc0;">(</span><span style="color: #a1b9e1;">let</span><span style="color: #a1b9e1;"> (</span><span style="color: #ccb9e3;">(</span><span style="color: #797979;">pt (</span><span style="color: #eae3d2;">point</span><span style="color: #797979;">)</span><span style="color: #ccb9e3;">)</span><span style="color: #a1b9e1;">)</span>
+          <span style="color: #a1b9e1;">(</span><span style="color: #ccb9e3;">cond</span><span style="color: #ccb9e3;"> (</span><span style="color: #797979;">(</span><span style="color: #eae3d2;">re-search-backward lispy-left (</span><span style="color: #b5c5e0;">line-beginning-position</span><span style="color: #eae3d2;">)</span> <span style="color: #eae3d2;">t</span><span style="color: #797979;">)</span>
+                 <span style="color: #797979;">(</span><span style="color: #eae3d2;">goto-char (</span><span style="color: #b5c5e0;">match-beginning 0</span><span style="color: #eae3d2;">)</span><span style="color: #797979;">)</span><span style="color: #ccb9e3;">)</span>
+
+                <span style="color: #ccb9e3;">(</span><span style="color: #797979;">(</span><span style="color: #eae3d2;">re-search-forward lispy-left (</span><span style="color: #b5c5e0;">line-end-position</span><span style="color: #eae3d2;">)</span> <span style="color: #eae3d2;">t</span><span style="color: #797979;">)</span>
+                 <span style="color: #797979;">(</span><span style="color: #eae3d2;">goto-char (</span><span style="color: #b5c5e0;">match-beginning 0</span><span style="color: #eae3d2;">)</span><span style="color: #797979;">)</span><span style="color: #ccb9e3;">)</span>
+
+                <span style="color: #ccb9e3;">(</span><span style="color: #797979;">t
+                 (</span><span style="color: #eae3d2;">back-to-indentation</span><span style="color: #797979;">)</span><span style="color: #ccb9e3;">)</span><span style="color: #a1b9e1;">)</span><span style="color: #e7dbc0;">)</span><span style="color: #797979;">)</span><span style="color: #ccb9e3;">)</span><span style="color: #a1b9e1;">)</span><span style="color: #e7dbc0;">)</span>
+</code></pre>
+</div>
+<p>
+to:
+</p>
+<div class="org-src-container">
+<pre class="src src-elisp"><code><span style="color: #e7dbc0;"><cursor>(</cursor></span><span style="color: #a1b9e1;">defun</span><span style="color: #a1b9e1;"> </span><span style="color: #a1b9e1;">lispy--occur-action</span><span style="color: #a1b9e1;"> (</span><span style="color: #ccb9e3;">x</span><span style="color: #a1b9e1;">)</span>
+  <span style="color: #c793d1bde2ad;">"Goto line X for `</span><span style="color: #c793d1bde2ad;">lispy-occur</span><span style="color: #c793d1bde2ad;">'."</span>
+  <span style="color: #a1b9e1;">(</span><span style="color: #ccb9e3;">goto-char lispy--occur-beg</span><span style="color: #a1b9e1;">)</span>
+  <span style="color: #a1b9e1;">(</span><span style="color: #ccb9e3;">let</span><span style="color: #ccb9e3;"> (</span><span style="color: #797979;">str-or-comment</span><span style="color: #ccb9e3;">)</span>
+    <span style="color: #ccb9e3;">(</span><span style="color: #797979;">cond</span><span style="color: #797979;"> (</span><span style="color: #e7dbc0;">(</span><span style="color: #a1b9e1;">string= helm-input </span><span style="color: #c793d1bde2ad;">""</span><span style="color: #e7dbc0;">)</span>
+           <span style="color: #e7dbc0;">(</span><span style="color: #a1b9e1;">forward-line x</span><span style="color: #e7dbc0;">)</span>
+           <span style="color: #e7dbc0;">(</span><span style="color: #a1b9e1;">back-to-indentation</span><span style="color: #e7dbc0;">)</span>
+           <span style="color: #e7dbc0;">(</span><span style="color: #a1b9e1;">when</span><span style="color: #a1b9e1;"> (</span><span style="color: #ccb9e3;">re-search-forward lispy-left (</span><span style="color: #797979;">line-end-position</span><span style="color: #ccb9e3;">)</span> <span style="color: #ccb9e3;">t</span><span style="color: #a1b9e1;">)</span>
+             <span style="color: #a1b9e1;">(</span><span style="color: #ccb9e3;">goto-char (</span><span style="color: #797979;">match-beginning 0</span><span style="color: #ccb9e3;">)</span><span style="color: #a1b9e1;">)</span><span style="color: #e7dbc0;">)</span><span style="color: #797979;">)</span>
+
+          <span style="color: #797979;">(</span><span style="color: #e7dbc0;">(</span><span style="color: #a1b9e1;">setq</span><span style="color: #a1b9e1;"> str-or-comment
+                 (</span><span style="color: #ccb9e3;">progn</span><span style="color: #ccb9e3;">
+                   (</span><span style="color: #797979;">forward-line (</span><span style="color: #eae3d2;">1- x</span><span style="color: #797979;">)</span><span style="color: #ccb9e3;">)</span>
+                   <span style="color: #ccb9e3;">(</span><span style="color: #797979;">re-search-forward (</span><span style="color: #eae3d2;">lispy--occur-regex</span><span style="color: #797979;">)</span>
+                                      <span style="color: #797979;">(</span><span style="color: #eae3d2;">line-end-position</span><span style="color: #797979;">)</span>
+                                      <span style="color: #797979;">t</span><span style="color: #ccb9e3;">)</span>
+                   <span style="color: #ccb9e3;">(</span><span style="color: #797979;">lispy--in-string-or-comment-p</span><span style="color: #ccb9e3;">)</span><span style="color: #a1b9e1;">)</span><span style="color: #e7dbc0;">)</span>
+           <span style="color: #e7dbc0;">(</span><span style="color: #a1b9e1;">goto-char str-or-comment</span><span style="color: #e7dbc0;">)</span><span style="color: #797979;">)</span>
+
+          <span style="color: #797979;">(</span><span style="color: #e7dbc0;">(</span><span style="color: #a1b9e1;">re-search-backward lispy-left (</span><span style="color: #ccb9e3;">line-beginning-position</span><span style="color: #a1b9e1;">)</span> <span style="color: #a1b9e1;">t</span><span style="color: #e7dbc0;">)</span>
+           <span style="color: #e7dbc0;">(</span><span style="color: #a1b9e1;">goto-char (</span><span style="color: #ccb9e3;">match-beginning 0</span><span style="color: #a1b9e1;">)</span><span style="color: #e7dbc0;">)</span><span style="color: #797979;">)</span>
+
+          <span style="color: #797979;">(</span><span style="color: #e7dbc0;">(</span><span style="color: #a1b9e1;">re-search-forward lispy-left (</span><span style="color: #ccb9e3;">line-end-position</span><span style="color: #a1b9e1;">)</span> <span style="color: #a1b9e1;">t</span><span style="color: #e7dbc0;">)</span>
+           <span style="color: #e7dbc0;">(</span><span style="color: #a1b9e1;">goto-char (</span><span style="color: #ccb9e3;">match-beginning 0</span><span style="color: #a1b9e1;">)</span><span style="color: #e7dbc0;">)</span><span style="color: #797979;">)</span>
+
+          <span style="color: #797979;">(</span><span style="color: #e7dbc0;">t
+           (</span><span style="color: #a1b9e1;">back-to-indentation</span><span style="color: #e7dbc0;">)</span><span style="color: #797979;">)</span><span style="color: #ccb9e3;">)</span><span style="color: #a1b9e1;">)</span><span style="color: #e7dbc0;">)</span>
+</code></pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org8a30786" class="outline-2">
+<h2 id="org8a30786">Screencast</h2>
+<div class="outline-text-2" id="text-org8a30786">
+<p>
+The screencast for this demo is here: <a href="https://www.youtube.com/watch?v=Djn6dXzXp_E">https://www.youtube.com/watch?v=Djn6dXzXp_E</a>
+</p>
+</div>
+</div>
+<div id="outline-container-orgf3c8f23" class="outline-2">
+<h2 id="orgf3c8f23">Step-by-step expansion</h2>
+<div class="outline-text-2" id="text-orgf3c8f23">
+</div>
+<div id="outline-container-org7102387" class="outline-3">
+<h3 id="org7102387">step 1</h3>
+<div class="outline-text-3" id="text-org7102387">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left"><kbd>qnm&gt;</kbd></td>
+<td class="org-left">mark two expressions before <code>let</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><kbd>tu(progn</kbd> <kbd>C-j</kbd> <kbd>h</kbd> <kbd>C-j</kbd></td>
+<td class="org-left">move them to the binding of    <code>str-or-comment</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><kbd>d&gt;</kbd></td>
+<td class="org-left">add one more expr to the <code>progn</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org943066a" class="outline-3">
+<h3 id="org943066a">step 2</h3>
+<div class="outline-text-3" id="text-org943066a">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left"><kbd>tx</kbd></td>
+<td class="org-left">teleport expression to <code>if</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><kbd>s</kbd></td>
+<td class="org-left">change order</td>
+</tr>
+
+<tr>
+<td class="org-left"><kbd>mk</kbd></td>
+<td class="org-left">mark <code>str-or-comment</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><kbd>(setq</kbd></td>
+<td class="org-left">wrap in <code>setq</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><kbd>C-e</kbd> <kbd>&gt;</kbd></td>
+<td class="org-left">finalize</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org53c8909" class="outline-3">
+<h3 id="org53c8909">step 3</h3>
+<div class="outline-text-3" id="text-org53c8909">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left"><kbd>ypt</kbd></td>
+<td class="org-left">see that <code>pt</code> isn't used and move there</td>
+</tr>
+
+<tr>
+<td class="org-left"><kbd>hjr</kbd></td>
+<td class="org-left">remove the <code>let</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><kbd>xi</kbd></td>
+<td class="org-left">transform <code>cond</code> to <code>if</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-orgd358455" class="outline-3">
+<h3 id="orgd358455">step 4</h3>
+<div class="outline-text-3" id="text-orgd358455">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left"><kbd>hC</kbd></td>
+<td class="org-left">move <code>let</code> binding up</td>
+</tr>
+
+<tr>
+<td class="org-left"><kbd>hhff/</kbd></td>
+<td class="org-left">simplify <code>let</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><kbd>xc</kbd></td>
+<td class="org-left">transform <code>if</code> to <code>cond</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><kbd>f</kbd> <kbd>C-RET</kbd></td>
+<td class="org-left">add empty line after <code>cond</code> branch</td>
+</tr>
+
+<tr>
+<td class="org-left"><kbd>j</kbd> <kbd>C-RET</kbd></td>
+<td class="org-left">add one more empty line</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

@@ -20,6 +20,7 @@
 #* Imports
 import ast
 import collections
+import importlib
 import inspect
 import io
 import json
@@ -32,7 +33,7 @@ import sys
 from ast import AST
 from contextlib import redirect_stdout
 from typing import List, Dict, Any, Union, Tuple, Optional, TypedDict, Callable, cast
-from types import TracebackType, MethodType, FunctionType, ModuleType
+from types import TracebackType, MethodType, FunctionType, ModuleType, FrameType
 
 def sh(cmd: str) -> str:
     r = subprocess.run(
@@ -53,11 +54,14 @@ except:
 try:
     import jedi
 except:
-    pyenv_version = sh("pyenv global")
-    pyversion = ".".join(pyenv_version.split(".")[:-1])
-    site_packages = os.path.expanduser(f"~/.pyenv/versions/{pyenv_version}/lib/python{pyversion}/site-packages/")
-    sys.path.append(site_packages)
-    import jedi
+    try:
+        pyenv_version = sh("pyenv global")
+        pyversion = ".".join(pyenv_version.split(".")[:-1])
+        site_packages = os.path.expanduser(f"~/.pyenv/versions/{pyenv_version}/lib/python{pyversion}/site-packages/")
+        sys.path.append(site_packages)
+        import jedi
+    except:
+        print("Failed to load jedi. Some features won't work")
 
 #* Classes
 class Stack:
@@ -138,14 +142,32 @@ class Autocall:
         return ""
 
 #* Functions
+def get_import_name(fname: str) -> str:
+    for p in sys.path:
+        if p == "":
+            continue
+        if fname.startswith(p):
+            return fname[len(p) + 1:].partition(".")[0].replace("/", ".")
+    return os.path.splitext(os.path.basename(fname))[0]
+
 def chfile(f: str) -> None:
     tf = top_level()
     tf.f_globals["__file__"] = f
+    name = get_import_name(f)
+    tf.f_globals["__name__"] = name
     d = os.path.dirname(f)
     try:
         os.chdir(d)
+        if "sys" not in tf.f_globals:
+            tf.f_globals["sys"] = importlib.import_module("sys")
+        if name not in tf.f_globals["sys"].modules:
+            try:
+                mod = importlib.import_module(name)
+                tf.f_globals["sys"].modules[name] = mod
+            except:
+                pass
     except:
-        pass
+        raise
 
 def arglist(sym: Callable) -> List[str]:
     def format_arg(arg_pair: Tuple[str, Optional[str]]) -> str:
@@ -173,6 +195,9 @@ def arglist(sym: Callable) -> List[str]:
 
 def print_elisp(obj: Any, end: str = "\n") -> None:
     if hasattr(obj, "_asdict") and obj._asdict is not None:
+        if hasattr(type(obj), "__repr__"):
+            print('"' + str(obj).replace('"', '') + '"')
+            return
         # namedtuple
         try:
             print_elisp(obj._asdict(), end)
@@ -208,14 +233,14 @@ def print_elisp(obj: Any, end: str = "\n") -> None:
         print_elisp(list(obj))
     elif isinstance(obj, int):
         print(obj)
+    elif isinstance(obj, list) or isinstance(obj, tuple):
+        print("(", end="")
+        for x in obj:
+            print_elisp(x)
+        print(")")
     else:
         if obj is not None:
-            if type(obj) is list or type(obj) is tuple:
-                print("(", end="")
-                for x in obj:
-                    print_elisp(x)
-                print(")")
-            elif type(obj) is str:
+            if type(obj) is str:
                 # quote strings?
                 # print("\"'" + re.sub("\"", "\\\"", obj) + "'\"", end=" ")
                 print('"' + re.sub("\"", "\\\"", obj) + '"', end=" ")
@@ -376,6 +401,9 @@ def slurp(fname: str) -> str:
         return fh.read()
 
 def definitions(path):
+    (_, ext) = os.path.splitext(path)
+    if ext == ".yml":
+        return yaml_definitions(path)
     script = jedi.Script(slurp(path), path=path)
     res = []
     for x in script.get_names():
@@ -401,6 +429,21 @@ def definitions(path):
         else:
             res.append([x.description, x.line])
     return res
+
+
+def yaml_definitions(path):
+    res = []
+    ls = slurp(path).strip().splitlines()
+    prev = ""
+    symbol = "(\\w|[-_])+"
+    for (i, line) in enumerate(ls, 1):
+        if m := re.match(f"^({symbol})", line):
+            res.append([m.group(1), i])
+            prev = m.group(1) + "."
+        elif m := re.match(f"^  ({symbol})", line):
+            res.append([prev + m.group(1), i])
+    return res
+
 
 def get_completions_readline(text):
     completions = []
@@ -436,7 +479,9 @@ def get_completions(text):
         (obj, part) = m.groups()
         regex = re.compile("^" + part)
         o = top_level().f_globals[obj]
-        for x in set(list(o.__dict__.keys()) + list(type(o).__dict__.keys())):
+        items = list(o.__dict__.keys()) if hasattr(o, "__dict__") else []
+        items += list(type(o).__dict__.keys()) if hasattr(type(o), "__dict__") else []
+        for x in set(items):
             if re.match(regex, x):
                 if not x.startswith("_") or part.startswith("_"):
                     completions.append(x)
@@ -548,15 +593,28 @@ def __PYTHON_EL_native_completion_setup():
 
 __PYTHON_EL_native_completion_setup()
 
+def setup(init_file=None):
+    sys.modules['__repl__'] = sys.modules[__name__]
+    tl = top_level()
+    tl.f_globals["__name__"] = "__repl__"
+    tl.f_globals["pm"] = Autocall(pm)
+    if init_file and os.path.exists(init_file):
+        try:
+            exec(open(init_file).read(), tl.f_globals)
+        except:
+            pass
+
 def reload():
     import importlib.util
     spec = importlib.util.spec_from_file_location('lispy-python', __file__)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     top_level().f_globals["lp"] = mod
+    sys._getframe().f_back.f_globals["lp"] = mod
+    sys._getframe().f_back.f_locals["lp"] = mod
+    return mod
 
 def reload_module(fname):
-    import importlib
     to_reload = []
     for (name, module) in sys.modules.copy().items():
         try:
@@ -645,7 +703,8 @@ def try_in_expr(p: Expr) -> Optional[Tuple[ast.expr, ast.expr]]:
         return None
     return (p0.value.left, p0.value.comparators[0])
 
-def select_item(code: str, idx: int) -> Any:
+def select_item(code: str, idx: int, _f: Optional[FrameType] = None) -> Any:
+    _f = _f or sys._getframe().f_back
     parsed = ast.parse(code, mode="exec").body
     in_expr = try_in_expr(parsed)
     assert in_expr
@@ -655,9 +714,9 @@ def select_item(code: str, idx: int) -> Any:
     locals_1 = locals()
     locals_2 = locals_1.copy()
     # pylint: disable=exec-used
-    exec(f"{l} = list({r})[{idx}]", top_level().f_globals, locals_2)
+    exec(f"{l} = list({r})[{idx}]", _f.f_locals | _f.f_globals, locals_2)
     for bind in [k for k in locals_2.keys() if k not in locals_1.keys()]:
-        top_level().f_globals[bind] = locals_2[bind]
+        _f.f_globals[bind] = locals_2[bind]
     # pylint: disable=eval-used
     return eval(l, locals_2)
 
@@ -691,17 +750,20 @@ def try_pytest_mark(p: Expr) -> Optional[Expr]:
         return [ast.Name(decorator.args[0].value), decorator.args[1]]
     return None
 
-def to_elisp(code: str) -> str:
+def to_elisp(code: str, _f: Optional[FrameType] = None) -> str:
+    _f = _f or top_level()
     with io.StringIO() as buf, redirect_stdout(buf):
         # pylint: disable=eval-used
-        print_elisp(eval(code, top_level().f_globals))
+        print_elisp(eval(code, _f.f_locals | _f.f_globals))
         return buf.getvalue().strip()
 
-def translate(code: str) -> Any:
+def translate(code: str, _f: Optional[FrameType] = None, use_in_expr: bool = False) -> Any:
+    _f = _f or sys._getframe().f_back
     parsed = ast.parse(code, mode="exec").body
-    if in_expr := try_in_expr(parsed):
+    in_expr = try_in_expr(parsed)
+    if use_in_expr and in_expr:
         (left, right) = in_expr
-        out = to_elisp(ast.unparse(right))
+        out = to_elisp(ast.unparse(right), _f)
         nc = f"print('''{out}''')\n'select'"
         return ast.parse(nc).body
     elif has_return(parsed):
@@ -717,52 +779,58 @@ class EvalResult(TypedDict):
     out: str
     err: Optional[str]
 
-def eval_code(_code: str, env: Dict[str, Any] = {}) -> EvalResult:
+def eval_code(_code: str, _env: Dict[str, Any] = {}) -> EvalResult:
     _res = "unset"
     binds = {}
     out = ""
     err: Optional[str] = None
-    if "fname" in env:
-        top_level().f_globals["__file__"] = env["fname"]
+    _f = _env.get("frame", sys._getframe().f_back)
+    if "fname" in _env:
+        _f.f_globals["__file__"] = _env["fname"]
     try:
-        _code = _code or slurp(env["code"])
-        new_code = translate(_code)
+        _code = _code or slurp(_env["code"])
+        new_code = translate(_code, _f, _env.get("use-in-expr", False))
         (*butlast, last) = new_code
-        if "__return__" in locals():
-            del locals()["__return__"]
-        locals_1 = locals()
+        _locals = {}
+        locals_1 = _locals
         locals_2 = locals_1.copy()
+        locals_globals = _f.f_locals | _f.f_globals
+        if "debug" in _env:
+            print(f"{ast.unparse(last)=}")
         with io.StringIO() as buf, redirect_stdout(buf):
-            # pylint: disable=exec-used
-            exec(ast.unparse(butlast), top_level().f_globals, locals_2)
-            for bind in [k for k in locals_2.keys() if k not in locals_1.keys()]:
-                top_level().f_globals[bind] = locals_2[bind]
+            if butlast:
+                # pylint: disable=exec-used
+                exec(ast.unparse(butlast), locals_globals, locals_2)
+                for bind in [k for k in locals_2.keys() if k not in locals_1.keys()]:
+                    _f.f_globals[bind] = locals_2[bind]
             try:
                 # pylint: disable=eval-used
-                _res = eval(ast.unparse(last), top_level().f_globals, locals_2)
-            except:
-                locals_1 = locals()
+                _res = eval(ast.unparse(last), locals_globals, locals_2)
+            except SyntaxError:
+                locals_1 = _locals
                 locals_2 = locals_1.copy()
-                exec(ast.unparse(last), top_level().f_globals, locals_2)
+                exec(ast.unparse(last), locals_globals, locals_2)
             out = buf.getvalue().strip()
         binds1 = [k for k in locals_2.keys() if k not in locals_1.keys()]
-        for sym in ["_res", "binds", "out", "err", "env", "new_code", "last", "butlast", "locals_1", "locals_2"]:
-            try:
-                if id(locals_1[sym]) != id(locals_2[sym]):
-                    binds1.append(sym)
-            except:
-                pass
         for bind in binds1:
-            top_level().f_globals[bind] = locals_2[bind]
+            _f.f_globals[bind] = locals_2[bind]
         binds2 = [bind for bind in binds1 if bind not in ["__res__", "__return__"]]
-        print_fn = cast(Callable[..., str], to_str if env.get("echo") else str)
+        print_fn = cast(Callable[..., str], to_str if _env.get("echo") else str)
         binds = {bind: print_fn(locals_2[bind]) for bind in binds2}
+    # except RuntimeError as e:
+    #     if str(e) == "break":
+    #         pm()
+    #     else:
+    #         raise
     # pylint: disable=broad-except
     except Exception as e:
         err = f"{e.__class__.__name__}: {e}\n{e.__dict__}"
-        top_level().f_globals["e"] = e
+        _f.f_globals["e"] = e
+        locs = e.__traceback__.tb_frame.f_locals.get("locals_2", {})
+        for bind in locs:
+            _f.f_globals[bind] = locs[bind]
     return {
-        "res": to_str(_res) if env.get("echo") else repr(_res),
+        "res": to_str(_res) if _env.get("echo") else repr(_res),
         "binds": binds,
         "out": out,
         "err": err
@@ -770,15 +838,16 @@ def eval_code(_code: str, env: Dict[str, Any] = {}) -> EvalResult:
 
 def eval_to_json(code: str, env: Dict[str, Any] = {}) -> None:
     try:
+        env["frame"] = sys._getframe().f_back
         s = json.dumps(eval_code(code, env))
         print(s)
     # pylint: disable=broad-except
     except Exception as e:
-        print({
+        print(json.dumps({
             "res": None,
             "binds": {},
             "out": "",
-            "err": str(e)})
+            "err": str(e)}))
 
 def find_module(fname: str) -> Optional[ModuleType]:
     for (name, module) in sys.modules.items():

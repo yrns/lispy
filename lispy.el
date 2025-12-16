@@ -5,6 +5,7 @@
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/lispy
 ;; Version: 0.27.0
+;; Package-Requires: ((emacs "24.3") (ace-window "0.9.0") (iedit "0.9.9") (swiper "0.13.4") (hydra "0.14.0") (zoutline "0.2.0"))
 ;; Keywords: lisp
 
 ;; This file is not part of GNU Emacs
@@ -220,7 +221,7 @@ The hint will consist of the possible nouns that apply to the verb."
   :group 'lispy)
 
 (defcustom lispy-close-quotes-at-end-p nil
-  "If t, when pressing the `\"' at the end of a quoted string, it will move you past the end quote."
+  "If t, when pressing `\"' at the end of a quoted string, move past the end quote."
   :type 'boolean
   :group 'lispy)
 
@@ -1691,25 +1692,29 @@ When ARG is more than 1, mark ARGth element."
           (t
            (lispy--mark (lispy--bounds-dwim))))))
 
+(defvar lispy-kill-at-point-hook nil)
+
 (defun lispy-kill-at-point ()
   "Kill the quoted string or the list that includes the point."
   (interactive)
-  (cond ((region-active-p)
-         (lispy--maybe-safe-kill-region (region-beginning)
-                                        (region-end)))
-        (t
-         (let ((bnd (or (lispy--bounds-comment)
-                        (lispy--bounds-string)
-                        (lispy--bounds-list)
-                        (and (derived-mode-p 'text-mode)
-                             (cons (save-excursion
-                                    (1+ (re-search-backward "[ \t\n]" nil t)))
-                                   (save-excursion
-                                    (1- (re-search-forward "[ \t\n]" nil t))))))))
-           (if buffer-read-only
-               (kill-new (buffer-substring
-                          (car bnd) (cdr bnd)))
-               (kill-region (car bnd) (cdr bnd)))))))
+  (cond
+   ((run-hook-with-args-until-success 'lispy-kill-at-point-hook))
+   ((region-active-p)
+    (lispy--maybe-safe-kill-region (region-beginning)
+                                   (region-end)))
+   (t
+    (let ((bnd (or (lispy--bounds-comment)
+                   (lispy--bounds-string)
+                   (lispy--bounds-list)
+                   (and (derived-mode-p 'text-mode)
+                        (cons (save-excursion
+                                (1+ (re-search-backward "[ \t\n]" nil t)))
+                              (save-excursion
+                                (1- (re-search-forward "[ \t\n]" nil t))))))))
+      (if buffer-read-only
+          (kill-new (buffer-substring
+                     (car bnd) (cdr bnd)))
+        (kill-region (car bnd) (cdr bnd)))))))
 
 (defun lispy-new-copy ()
   "Copy marked region or sexp to kill ring."
@@ -1973,7 +1978,8 @@ behavior, set this variable to nil.")
 
 (defvar lispy-colon-no-space-regex
   '((lisp-mode . "\\s-\\|[:^?#]\\|ql\\|\\(?:\\(\\s(\\|'\\)[[:word:]-]*\\)")
-    (slime-repl-mode . ""))
+    (slime-repl-mode . "")
+    (sly-mrepl-mode . ""))
   "Overrides REGEX that `lispy-colon' will consider for `major-mode'.
 `lispy-colon' will insert \" :\" instead of \":\" unless
 `lispy-no-space' is t or `looking-back' REGEX.")
@@ -2468,7 +2474,11 @@ If indenting does not adjust indentation or move the point, call
         (bnd (when (region-active-p)
                (cons (region-beginning)
                      (region-end)))))
-    (indent-for-tab-command)
+    ;; the current TAB may not always be `indent-for-tab-command'
+    (cond
+     ((memq major-mode '(minibuffer-mode minibuffer-inactive-mode))
+      (completion-at-point))
+     (t (indent-for-tab-command)))
     (when (and (= tick (buffer-chars-modified-tick))
                (= pt (point)))
       (if bnd
@@ -4208,7 +4218,7 @@ SYMBOL is a string."
      le-julia lispy-eval-julia lispy-eval-julia-str)
     (racket-mode
      le-racket lispy--eval-racket)
-    (scheme-mode
+    ((scheme-mode geiser-repl-mode)
      le-scheme lispy--eval-scheme)
     (lisp-mode
      le-lisp lispy--eval-lisp)
@@ -4246,8 +4256,11 @@ When at an outline, eval the outline."
                       (lispy-message res))
                      ((or (fboundp 'cider--display-interactive-eval-result)
                           (require 'cider nil t))
-                      (cider--display-interactive-eval-result
-                       res (cdr (lispy--bounds-dwim))))
+                      (if (version< cider-version "1.9.0")
+                        (cider--display-interactive-eval-result
+                          res (cdr (lispy--bounds-dwim)))
+                        (cider--display-interactive-eval-result
+                          res 'value (cdr (lispy--bounds-dwim)))))
                      ((or (fboundp 'eros--eval-overlay)
                           (require 'eros nil t))
                       (eros--eval-overlay
@@ -5461,7 +5474,7 @@ The bindings of `lispy-backward' or `lispy-mark-symbol' can also be used."
   (let* ((bnd (lispy--bounds-dwim))
          (str (lispy--string-dwim bnd))
          (kind (lispy--bind-variable-kind))
-         (fmt (if (eq major-mode 'clojure-mode)
+         (fmt (if (memq major-mode lispy-clojure-modes)
                   '("(let [ %s]\n)" . 6)
                 '("(let (( %s))\n)" . 7))))
     (setq lispy-bind-var-in-progress t)
@@ -6628,7 +6641,9 @@ Otherwise return cons of current string, symbol or list bounds."
              (org-back-to-heading t)
              (point))
            (progn
-             (org-end-of-subtree t t)
+             (outline-mark-subtree)
+             (exchange-point-and-mark)
+             (deactivate-mark)
              (when (and (org-at-heading-p)
                         (not (eobp)))
                (backward-char 1))
@@ -7386,7 +7401,9 @@ See https://clojure.org/guides/weird_characters#_character_literal.")
                   (lispy--read-replace " *,+" "clojure-commas"))
                 ;; ——— \ char syntax (LISP)————
                 (goto-char (point-min))
-                (while (re-search-forward "#\\\\\\(.\\)" nil t)
+                (while (let ((case-fold-search nil))
+                         ;; http://lispworks.com/documentation/HyperSpec/Body/02_ac.htm
+                         (re-search-forward "#\\\\\\(space\\|newline\\|.\\)" nil t))
                   (unless (lispy--in-string-or-comment-p)
                     (replace-match (format "(ly-raw lisp-char %S)"
                                            (substring-no-properties
@@ -7627,42 +7644,48 @@ Defaults to `error'."
 (defun lispy--function-parse (str)
   "Extract the function body and args from it's expression STR."
   (let ((body (lispy--read str))
-        args)
-    (cond ((eq (car body) 'lambda)
-           (setq body (cons 'defun body)))
-          ((eq (car body) 'closure)
-           (setq body `(defun noname ,@(cddr body))))
-          ((eq (car body) 'defsubst)
-           (setq body (cons 'defun (cdr body)))))
-    (cond ((memq (car body) '(defun defmacro))
-           (setq body (lispy--whitespace-trim (cdr body))))
-          ((eq (car body) 'defalias)
-           (let ((name (cadr (cadr (read str)))))
-             (setq body
-                   (cons name (cdr (symbol-function name))))))
-          (t
-           (error "Expected defun, defmacro, or defalias got %s" (car body))))
-    (if (symbolp (car body))
-        (setq body (lispy--whitespace-trim (cdr body)))
-      (error "Expected function name, got %s" (car body)))
-    (if (listp (car body))
-        (progn
-          (setq args (car body))
+  args)
+    (if (not (consp body))
+        (progn (setq args (aref body 0))
+               (setq body (aref body 1)))
+      ;; In Emacs 30, `read' returns a dedicated type, instead of
+      ;; simple list, for lambdas, defuns, closures, etc.  And code
+      ;; below is only valid for `defmacro'.  Keep it for Emacs < 30.
+      (cond ((eq (car body) 'lambda)
+             (setq body (cons 'defun body)))
+            ((eq (car body) 'closure)
+             (setq body `(defun noname ,@(cddr body))))
+            ((eq (car body) 'defsubst)
+             (setq body (cons 'defun (cdr body)))))
+      (cond ((memq (car body) '(defun defmacro))
+             (setq body (lispy--whitespace-trim (cdr body))))
+            ((eq (car body) 'defalias)
+             (let ((name (cadr (cadr (read str)))))
+               (setq body
+                     (cons name (cdr (symbol-function name))))))
+            (t
+             (error "Expected defun, defmacro, or defalias got %s" (car body))))
+      (if (symbolp (car body))
+          (setq body (lispy--whitespace-trim (cdr body)))
+        (error "Expected function name, got %s" (car body)))
+      (if (listp (car body))
+          (progn
+            (setq args (car body))
+            (setq body (lispy--whitespace-trim (cdr body))))
+        (error "Expected function arguments, got %s" (car body)))
+      ;; skip docstring
+      (if (and (listp (car body))
+               (eq (caar body) 'ly-raw)
+               (eq (cadar body) 'string))
           (setq body (lispy--whitespace-trim (cdr body))))
-      (error "Expected function arguments, got %s" (car body)))
-    ;; skip docstring
-    (if (and (listp (car body))
-             (eq (caar body) 'ly-raw)
-             (eq (cadar body) 'string))
-        (setq body (lispy--whitespace-trim (cdr body))))
-    ;; skip declare
-    (if (and (listp (car body))
-             (eq (caar body) 'declare))
-        (setq body (lispy--whitespace-trim (cdr body))))
-    ;; skip interactive
-    (if (and (listp (car body))
-             (eq (caar body) 'interactive))
-        (setq body (lispy--whitespace-trim (cdr body))))
+      ;; skip declare
+      (if (and (listp (car body))
+               (eq (caar body) 'declare))
+          (setq body (lispy--whitespace-trim (cdr body))))
+      ;; skip interactive
+      (if (and (listp (car body))
+               (eq (caar body) 'interactive))
+          (setq body (lispy--whitespace-trim (cdr body)))))
     (list args body)))
 
 (defun lispy--flatten-function (fstr e-args)

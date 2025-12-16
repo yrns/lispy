@@ -23,6 +23,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'eieio)
 
 (defvar lispy-tag-arity) ;; defined in lispy
 

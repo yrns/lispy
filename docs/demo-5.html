@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2025-10-27 Mon 21:43 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>lispy.el demo 5: -&gt;&gt;ification</title>
+<meta name="author" content="Ahmed Khanzada" />
+<meta name="generator" content="Org Mode" />
+<link rel="stylesheet" type="text/css" href="demo-style.css"/>
+</head>
+<body>
+<div id="preamble" class="status">
+<link rel="icon" type="image/x-icon" href="https://github.com/favicon.ico"/>
+</div>
+<div id="content" class="content">
+<h1 class="title">lispy.el demo 5: -&gt;&gt;ification</h1>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left"><a href="https://github.com/abo-abo/lispy">Back to github</a></td>
+<td class="org-left"><a href="https://raw.githubusercontent.com/abo-abo/lispy/gh-pages/demo-5.org">This file in org-mode</a></td>
+<td class="org-left"><a href="http://abo-abo.github.io/lispy/">Function reference</a></td>
+</tr>
+</tbody>
+</table>
+<div id="outline-container-orgb7fb506" class="outline-2">
+<h2 id="orgb7fb506">Intro</h2>
+<div class="outline-text-2" id="text-orgb7fb506">
+<p>
+This demo covers some very basic lispy commands such as:
+</p>
+<ul class="org-ul">
+<li>move code up/down with <kbd>w</kbd> / <kbd>s</kbd></li>
+<li>grow/shrink current list with <kbd>&gt;</kbd> / <kbd>&lt;</kbd></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org2f9c7d5" class="outline-2">
+<h2 id="org2f9c7d5">Task summary</h2>
+<div class="outline-text-2" id="text-org2f9c7d5">
+<p>
+Transform from:
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure"><code><span style="color: #e7dbc0;"><cursor>(</cursor></span><span style="color: #a1b9e1;">map #(</span><span style="color: #ccb9e3;">* </span><span style="color: #ccb9e3;">%</span><span style="color: #ccb9e3;"> </span><span style="color: #ccb9e3;">%</span><span style="color: #a1b9e1;">)</span> <span style="color: #a1b9e1;">(</span><span style="color: #ccb9e3;">filter odd? [</span><span style="color: #797979;">1 2 3 4 5</span><span style="color: #ccb9e3;">]</span><span style="color: #a1b9e1;">)</span><span style="color: #e7dbc0;">)</span>
+</code></pre>
+</div>
+<p>
+to:
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure"><code><span style="color: #e7dbc0;"><cursor>(</cursor></span><span style="color: #a1b9e1;">-&gt;&gt;</span><span style="color: #a1b9e1;"> [</span><span style="color: #ccb9e3;">1 2 3 4 5</span><span style="color: #a1b9e1;">]</span>
+  <span style="color: #a1b9e1;">(</span><span style="color: #ccb9e3;">filter odd?</span><span style="color: #a1b9e1;">)</span>
+  <span style="color: #a1b9e1;">(</span><span style="color: #ccb9e3;">map #(</span><span style="color: #797979;">* </span><span style="color: #797979;">%</span><span style="color: #797979;"> </span><span style="color: #797979;">%</span><span style="color: #ccb9e3;">)</span><span style="color: #a1b9e1;">)</span><span style="color: #e7dbc0;">)</span>
+</code></pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org2cd2ea3" class="outline-2">
+<h2 id="org2cd2ea3">Screencast</h2>
+<div class="outline-text-2" id="text-org2cd2ea3">
+<p>
+The screencast for this demo is here: <a href="http://youtu.be/N7C3FX4mr_o">http://youtu.be/N7C3FX4mr_o</a>
+</p>
+</div>
+</div>
+<div id="outline-container-orga9c3328" class="outline-2">
+<h2 id="orga9c3328">Step-by-step expansion</h2>
+<div class="outline-text-2" id="text-orga9c3328">
+</div>
+<div id="outline-container-org6e57f0a" class="outline-3">
+<h3 id="org6e57f0a">step 1</h3>
+<div class="outline-text-3" id="text-org6e57f0a">
+<p>
+<kbd>2(</kbd> to wrap with parens, enter <code>-&gt;&gt;</code>:
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure"><code><span style="color: #e7dbc0;">(</span><span style="color: #a1b9e1;">-&gt;&gt;</span><span style="color: #a1b9e1;"><cursor> </cursor>(</span><span style="color: #ccb9e3;">map #(</span><span style="color: #797979;">* </span><span style="color: #797979;">%</span><span style="color: #797979;"> </span><span style="color: #797979;">%</span><span style="color: #ccb9e3;">)</span> <span style="color: #ccb9e3;">(</span><span style="color: #797979;">filter odd? [</span><span style="color: #e7dbc0;">1 2 3 4 5</span><span style="color: #797979;">]</span><span style="color: #ccb9e3;">)</span><span style="color: #a1b9e1;">)</span><span style="color: #e7dbc0;">)</span>
+</code></pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org429cc6e" class="outline-3">
+<h3 id="org429cc6e">step 2</h3>
+<div class="outline-text-3" id="text-org429cc6e">
+<ul class="org-ul">
+<li><kbd>C-f</kbd> to get into special</li>
+<li><kbd>d</kbd> to switch to the different side</li>
+<li><kbd>&lt;</kbd> to shrink list</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-clojure"><code><span style="color: #e7dbc0;">(</span><span style="color: #a1b9e1;">-&gt;&gt;</span><span style="color: #a1b9e1;"> (</span><span style="color: #ccb9e3;">map #(</span><span style="color: #797979;">* </span><span style="color: #797979;">%</span><span style="color: #797979;"> </span><span style="color: #797979;">%</span><span style="color: #ccb9e3;">)</span><span style="color: #a1b9e1;">)<cursor> </cursor>(</span><span style="color: #ccb9e3;">filter odd? [</span><span style="color: #797979;">1 2 3 4 5</span><span style="color: #ccb9e3;">]</span><span style="color: #a1b9e1;">)</span><span style="color: #e7dbc0;">)</span>
+</code></pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org7e6731a" class="outline-3">
+<h3 id="org7e6731a">step 3</h3>
+<div class="outline-text-3" id="text-org7e6731a">
+<ul class="org-ul">
+<li><kbd>j</kbd> to move the cursor down by one sexp</li>
+<li><kbd>&lt;</kbd> to shrink again</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-clojure"><code><span style="color: #e7dbc0;">(</span><span style="color: #a1b9e1;">-&gt;&gt;</span><span style="color: #a1b9e1;"> (</span><span style="color: #ccb9e3;">map #(</span><span style="color: #797979;">* </span><span style="color: #797979;">%</span><span style="color: #797979;"> </span><span style="color: #797979;">%</span><span style="color: #ccb9e3;">)</span><span style="color: #a1b9e1;">)</span> <span style="color: #a1b9e1;">(</span><span style="color: #ccb9e3;">filter odd?</span><span style="color: #a1b9e1;">)<cursor> </cursor>[</span><span style="color: #ccb9e3;">1 2 3 4 5</span><span style="color: #a1b9e1;">]</span><span style="color: #e7dbc0;">)</span>
+</code></pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org75c62bb" class="outline-3">
+<h3 id="org75c62bb">step 4</h3>
+<div class="outline-text-3" id="text-org75c62bb">
+<ul class="org-ul">
+<li><kbd>j</kbd> to move the cursor down</li>
+<li><kbd>ww</kbd> to move the expression up twice</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-clojure"><code><span style="color: #e7dbc0;">(</span><span style="color: #a1b9e1;">-&gt;&gt;</span><span style="color: #a1b9e1;"> [</span><span style="color: #ccb9e3;">1 2 3 4 5</span><span style="color: #a1b9e1;">]<cursor> </cursor>(</span><span style="color: #ccb9e3;">map #(</span><span style="color: #797979;">* </span><span style="color: #797979;">%</span><span style="color: #797979;"> </span><span style="color: #797979;">%</span><span style="color: #ccb9e3;">)</span><span style="color: #a1b9e1;">)</span> <span style="color: #a1b9e1;">(</span><span style="color: #ccb9e3;">filter odd?</span><span style="color: #a1b9e1;">)</span><span style="color: #e7dbc0;">)</span>
+</code></pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org2a70e1c" class="outline-3">
+<h3 id="org2a70e1c">step 5</h3>
+<div class="outline-text-3" id="text-org2a70e1c">
+<ul class="org-ul">
+<li><kbd>js</kbd> to select <code>map</code> and move it down once</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-clojure"><code><span style="color: #e7dbc0;">(</span><span style="color: #a1b9e1;">-&gt;&gt;</span><span style="color: #a1b9e1;"> [</span><span style="color: #ccb9e3;">1 2 3 4 5</span><span style="color: #a1b9e1;">]</span> <span style="color: #a1b9e1;">(</span><span style="color: #ccb9e3;">filter odd?</span><span style="color: #a1b9e1;">)</span> <span style="color: #a1b9e1;">(</span><span style="color: #ccb9e3;">map #(</span><span style="color: #797979;">* </span><span style="color: #797979;">%</span><span style="color: #797979;"> </span><span style="color: #797979;">%</span><span style="color: #ccb9e3;">)</span><span style="color: #a1b9e1;">)<cursor><</cursor>/span><span style="color: #e7dbc0;">)</span>
+</code></pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org06647a2" class="outline-3">
+<h3 id="org06647a2">step 6</h3>
+<div class="outline-text-3" id="text-org06647a2">
+<ul class="org-ul">
+<li><kbd>C-f</kbd> or <kbd>C-3</kbd> to exit the list (<kbd>l</kbd> should work as well since the
+point is still special)</li>
+<li><kbd>M</kbd> to multiline</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-clojure"><code><span style="color: #e7dbc0;">(</span><span style="color: #a1b9e1;">-&gt;&gt;</span><span style="color: #a1b9e1;"> [</span><span style="color: #ccb9e3;">1 2 3 4 5</span><span style="color: #a1b9e1;">]</span>
+     <span style="color: #a1b9e1;">(</span><span style="color: #ccb9e3;">filter odd?</span><span style="color: #a1b9e1;">)</span>
+     <span style="color: #a1b9e1;">(</span><span style="color: #ccb9e3;">map #(</span><span style="color: #797979;">* </span><span style="color: #797979;">%</span><span style="color: #797979;"> </span><span style="color: #797979;">%</span><span style="color: #ccb9e3;">)</span><span style="color: #a1b9e1;">)</span><span style="color: #e7dbc0;">)<cursor><</cursor>/span>
+</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>
