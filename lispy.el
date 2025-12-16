@@ -133,15 +133,16 @@
 
 ;;* Requires
 (eval-when-compile
-  (require 'org)
+  ;; (require 'org)
   (require 'iedit)
   (require 'eldoc)
   (require 'ediff)
   (require 'ediff-util)
-  (require 'semantic)
-  (require 'semantic/db))
+  ;; (require 'semantic)
+  ;; (require 'semantic/db)
+  )
 ;;(require 'zoutline)
-(require 'mode-local)
+;;(require 'mode-local)
 (require 'lispy-tags)
 (require 'help-fns)
 (require 'edebug)
@@ -2068,7 +2069,7 @@ When the region is active, toggle a ~ at the start of the region."
 (declare-function cider-eval-print-last-sexp "ext:cider-eval")
 (declare-function cider-repl-newline-and-indent "ext:cider-repl")
 (declare-function ielm-return "ielm")
-(declare-function mode-local-bind "mode-local")
+;;(declare-function mode-local-bind "mode-local")
 
 (defun lispy-newline-and-indent ()
   "Insert newline."
@@ -3473,9 +3474,9 @@ When ARG is `fill', do nothing for short expressions."
      define-key nth throw define-error defadvice defhydra defsubst)
   "List of constructs for which the first 3 elements are on the first line.")
 
-(setq-mode-local
- clojure-mode
- lispy--multiline-take-3 '())
+;; (setq-mode-local
+;;  clojure-mode
+;;  lispy--multiline-take-3 '())
 
 (defvar lispy--multiline-take-3-arg
   '(defun defmacro declare-function define-error defadvice defhydra defsubst)
@@ -3499,12 +3500,12 @@ The third one is assumed to be the arglist and will not be changed.")
       not pop listp or and)
   "List of constructs for which the first 2 elements are on the first line.")
 
-(setq-mode-local
- clojure-mode
- lispy--multiline-take-2 '(loop recur for fn def defn ns if -> ->>
-                           + +' - -' * *' / > >= < <= = ==
-                           or and not
-                           assoc! assoc assoc-in concat))
+;; (setq-mode-local
+;;  clojure-mode
+;;  lispy--multiline-take-2 '(loop recur for fn def defn ns if -> ->>
+;;                            + +' - -' * *' / > >= < <= = ==
+;;                            or and not
+;;                            assoc! assoc assoc-in concat))
 
 (defvar lispy--multiline-take-2-arg '(declare lambda
                                       make-variable-buffer-local
@@ -8634,6 +8635,7 @@ PLIST currently accepts:
               (call-interactively ',def))
 
              (t
+              ;; (message "insert %s %s" (null inserter) last-command-event)
               (setq this-command 'self-insert-command)
               (call-interactively
                (quote
